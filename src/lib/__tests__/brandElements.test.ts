@@ -9,7 +9,7 @@ import { GT_BRAND_IDENTITY } from '../brandIdentity';
 
 describe('BRAND_ELEMENTS', () => {
   it('covers digital, developer, social, editorial, event, and physical identity applications', () => {
-    expect(BRAND_ELEMENTS.length).toBeGreaterThanOrEqual(47);
+    expect(BRAND_ELEMENTS.length).toBeGreaterThanOrEqual(66);
     expect(new Set(BRAND_ELEMENTS.map(({ id }) => id)).size).toBe(BRAND_ELEMENTS.length);
     expect(new Set(BRAND_ELEMENTS.map(({ category }) => category))).toEqual(
       new Set(['Digital', 'Product', 'Developer', 'Social', 'Editorial', 'Event', 'Physical'])
@@ -29,6 +29,12 @@ describe('BRAND_ELEMENTS', () => {
         'form-controls',
         'data-table',
         'pricing-card',
+        'auth-screen',
+        'onboarding-checklist',
+        'api-reference-hero',
+        'video-thumbnail',
+        'case-study-cover',
+        'booth-wall',
       ])
     );
   });

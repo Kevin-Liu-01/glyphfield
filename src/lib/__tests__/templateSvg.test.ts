@@ -82,11 +82,20 @@ describe('buildTemplateSvg', () => {
       slideLayout: 'timeline',
       width: 1600,
     });
+    const chart = buildTemplateSvg({
+      ...baseOptions,
+      height: 900,
+      kind: 'slides',
+      slideLayout: 'chart',
+      width: 1600,
+    });
 
     expect(metrics).toContain('98.7%');
     expect(metrics).toContain('Coverage');
     expect(timeline).toContain('Discover');
     expect(timeline).toContain('Ship');
     expect(timeline).not.toBe(metrics);
+    expect(chart).toContain('+42%');
+    expect(chart).not.toBe(metrics);
   });
 });

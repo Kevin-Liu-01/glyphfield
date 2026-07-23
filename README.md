@@ -26,7 +26,7 @@
 ## One identity, every surface
 
 Glyphfield keeps the foundations and the outputs in the same system. Define a
-brand once, then use the active identity across 15 focused tools and 47
+brand once, then use the active identity across 15 focused tools and 66
 production touchpoints without rebuilding the context for every artifact.
 
 | Foundation | Expression | Application | Delivery |
@@ -90,7 +90,7 @@ export.
   lines, and grids as portable SVG-composed images.
 - Studio appearance persists light or dark mode, accent, canvas density, and a
   choice of Switzer, Be Vietnam Pro, Schibsted Grotesk, or Rethink Sans.
-- Templates include eight slide layouts plus blog, partnership, OpenGraph,
+- Templates include fourteen slide layouts plus blog, partnership, OpenGraph,
   terminal, email, and brand-element systems.
 - Fumadocs powers 24 feature, artifact, integration, and API guides.
 - Landing, Studio, and every documentation page receive generated 1200 × 630

@@ -392,7 +392,7 @@ function templatePlan(input: Record<string, unknown>): AgentTemplatePlan {
   );
   const slideLayout = oneOf(
     input.slideLayout,
-    ['title', 'section', 'agenda', 'split', 'metrics', 'quote', 'timeline', 'closing'] as const,
+    ['title', 'section', 'agenda', 'split', 'metrics', 'quote', 'timeline', 'statement', 'comparison', 'process', 'chart', 'team', 'image', 'closing'] as const,
     'title',
     'slideLayout'
   );

@@ -5,6 +5,7 @@ import { T, useGT } from 'gt-next';
 import { ImagePlus } from 'lucide-react';
 
 import ColorControl from '@/components/ui/ColorControl';
+import StudioSelect from '@/components/ui/StudioSelect';
 import { brandAssetPath, type BrandIdentity } from '@/lib/brandIdentity';
 import { formatOklch, hexToOklch } from '@/lib/color';
 import type { StudioTool } from '@/lib/studioCatalog';
@@ -119,6 +120,41 @@ export default function BrandSettingsStudio({
             <SettingField label={<T>Tagline</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ tagline: event.target.value })} value={identity.tagline} /></SettingField>
             <SettingField label={<T>Positioning</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ positioning: event.target.value })} value={identity.positioning} /></SettingField>
             <SettingField label={<T>Description</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ description: event.target.value })} value={identity.description} /></SettingField>
+            <SettingField label={<T>Mission</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ mission: event.target.value })} value={identity.mission} /></SettingField>
+            <SettingField label={<T>Contact email</T>}><input className={INPUT_CLASS} onChange={(event) => update({ contactEmail: event.target.value })} type='email' value={identity.contactEmail} /></SettingField>
+            <SettingField label={<T>Social handle</T>}><input className={INPUT_CLASS} onChange={(event) => update({ socialHandle: event.target.value })} value={identity.socialHandle} /></SettingField>
+          </SettingSection>
+
+          <SettingSection title={<T>System defaults</T>}>
+            <SettingField label={<T>Interface density</T>}>
+              <StudioSelect ariaLabel={gt('Interface density')} onValueChange={(density) => update({ style: { ...identity.style, density: density as typeof identity.style.density } })} options={[
+                { label: gt('Compact'), value: 'compact' },
+                { label: gt('Comfortable'), value: 'comfortable' },
+                { label: gt('Spacious'), value: 'spacious' },
+              ]} value={identity.style.density} />
+            </SettingField>
+            <SettingField label={<T>Image treatment</T>}>
+              <StudioSelect ariaLabel={gt('Image treatment')} onValueChange={(imageTreatment) => update({ style: { ...identity.style, imageTreatment: imageTreatment as typeof identity.style.imageTreatment } })} options={[
+                { label: gt('Natural'), value: 'natural' },
+                { label: gt('Monochrome'), value: 'monochrome' },
+                { label: gt('Duotone'), value: 'duotone' },
+              ]} value={identity.style.imageTreatment} />
+            </SettingField>
+            <SettingField label={<T>Construction field</T>}>
+              <StudioSelect ariaLabel={gt('Construction field')} onValueChange={(grid) => update({ style: { ...identity.style, grid: grid as typeof identity.style.grid } })} options={[
+                { label: gt('None'), value: 'none' },
+                { label: gt('Dots'), value: 'dots' },
+                { label: gt('Lines'), value: 'lines' },
+              ]} value={identity.style.grid} />
+            </SettingField>
+            <label className='flex flex-col gap-2 text-sm'>
+              <span className='flex items-center justify-between text-xs text-muted-foreground'><T>Corner radius</T><output>{identity.style.borderRadius}px</output></span>
+              <input className='studio-range' max={32} min={0} onChange={(event) => update({ style: { ...identity.style, borderRadius: Number(event.target.value) } })} type='range' value={identity.style.borderRadius} />
+            </label>
+            <label className='flex flex-col gap-2 text-sm'>
+              <span className='flex items-center justify-between text-xs text-muted-foreground'><T>Default logo scale</T><output>{identity.style.logoScale}%</output></span>
+              <input className='studio-range' max={160} min={40} onChange={(event) => update({ style: { ...identity.style, logoScale: Number(event.target.value) } })} type='range' value={identity.style.logoScale} />
+            </label>
           </SettingSection>
 
           <SettingSection title={<T>Logos</T>}>
@@ -138,6 +174,7 @@ export default function BrandSettingsStudio({
             {identity.colors.map((color, index) => (
               <div className='flex flex-col gap-2' key={color.id}>
                 <input aria-label={gt('Color name')} className={INPUT_CLASS} onChange={(event) => update({ colors: identity.colors.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item) })} value={color.name} />
+                <input aria-label={gt('{name} usage', { name: color.name })} className={INPUT_CLASS} onChange={(event) => update({ colors: identity.colors.map((item, itemIndex) => itemIndex === index ? { ...item, role: event.target.value } : item) })} value={color.role} />
                 <ColorControl
                   ariaLabel={gt('{name} color', { name: color.name })}
                   label={color.role}
@@ -150,9 +187,12 @@ export default function BrandSettingsStudio({
 
           <SettingSection title={<T>Typography</T>}>
             {identity.typography.map((font, index) => (
-              <div className='grid grid-cols-[72px_minmax(0,1fr)] items-center gap-3' key={`${font.role}-${index}`}>
+              <div className='grid grid-cols-[72px_minmax(0,1fr)] items-start gap-3' key={`${font.role}-${index}`}>
                 <span className='font-mono text-[10px] uppercase text-muted-foreground'>{font.role}</span>
-                <input className={INPUT_CLASS} onChange={(event) => update({ typography: identity.typography.map((item, itemIndex) => itemIndex === index ? { ...item, family: event.target.value } : item) })} value={font.family} />
+                <span className='flex flex-col gap-2'>
+                  <input className={INPUT_CLASS} onChange={(event) => update({ typography: identity.typography.map((item, itemIndex) => itemIndex === index ? { ...item, family: event.target.value } : item) })} value={font.family} />
+                  <input aria-label={gt('{role} font usage', { role: font.role })} className={INPUT_CLASS} onChange={(event) => update({ typography: identity.typography.map((item, itemIndex) => itemIndex === index ? { ...item, usage: event.target.value } : item) })} value={font.usage} />
+                </span>
               </div>
             ))}
           </SettingSection>
@@ -163,11 +203,14 @@ export default function BrandSettingsStudio({
             <SettingField label={<T>Approved phrases · one per line</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ voice: { ...identity.voice, phrases: parseList(event.target.value) } })} value={listValue(identity.voice.phrases)} /></SettingField>
             <SettingField label={<T>Avoid · one per line</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ voice: { ...identity.voice, avoid: parseList(event.target.value) } })} value={listValue(identity.voice.avoid)} /></SettingField>
             <SettingField label={<T>Audiences · one per line</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ audiences: parseList(event.target.value) })} value={listValue(identity.audiences)} /></SettingField>
+            <SettingField label={<T>Brand values · one per line</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ values: parseList(event.target.value) })} value={listValue(identity.values)} /></SettingField>
+            <SettingField label={<T>Products · one per line</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ products: parseList(event.target.value) })} value={listValue(identity.products)} /></SettingField>
+            <SettingField label={<T>Proof points · one per line</T>}><textarea className={TEXTAREA_CLASS} onChange={(event) => update({ proof: parseList(event.target.value) })} value={listValue(identity.proof)} /></SettingField>
           </SettingSection>
         </aside>
 
         <div className='tool-canvas min-h-0 overflow-auto p-5 sm:p-8'>
-          <div className='brand-settings-preview mx-auto flex w-full max-w-5xl flex-col gap-px overflow-hidden border border-border bg-border shadow-sm'>
+          <div className='brand-settings-preview mx-auto flex w-full max-w-5xl flex-col gap-px overflow-hidden border border-border bg-border shadow-sm' style={{ borderRadius: identity.style.borderRadius }}>
             <section className='relative min-h-[360px] overflow-hidden bg-white p-8 text-[#181818] sm:p-12'>
               <div className='absolute inset-0 opacity-50 [background-image:radial-gradient(circle,#D4D4D4_1px,transparent_1px)] [background-size:18px_18px]' />
               <div className='relative flex h-full min-h-[264px] flex-col justify-between'>
@@ -185,6 +228,7 @@ export default function BrandSettingsStudio({
               <div className='flex flex-col justify-between gap-10 border-l border-border bg-background p-8'>
                 <div>{identity.typography.map((font) => <div className='mb-5' key={font.role}><p className='font-mono text-[10px] uppercase text-muted-foreground'>{font.role} / {font.family}</p><p className='mt-1 text-2xl font-semibold' style={{ fontFamily: font.family }}>{identity.name}</p></div>)}</div>
                 <div><p className='font-mono text-[10px] uppercase text-muted-foreground'><T>Voice</T></p><div className='mt-3 flex flex-wrap gap-2'>{identity.voice.principles.map((principle) => <span className='border border-border px-2.5 py-1 text-xs' key={principle}>{principle}</span>)}</div></div>
+                <div><p className='font-mono text-[10px] uppercase text-muted-foreground'><T>Values</T></p><div className='mt-3 flex flex-wrap gap-2'>{identity.values.map((value) => <span className='border border-border px-2.5 py-1 text-xs' key={value}>{value}</span>)}</div></div>
               </div>
             </section>
             <section className='grid min-h-44 grid-cols-2'>

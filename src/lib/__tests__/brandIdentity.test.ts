@@ -104,4 +104,22 @@ describe('hydrateBrandIdentities', () => {
 
     expect(identities[1].assets.map(({ id }) => id)).toEqual(['mark-dark', 'mark-light']);
   });
+
+  it('backfills new shared system fields in legacy built-in projects', () => {
+    const legacyGt: Record<string, unknown> = { ...GT_BRAND_IDENTITY };
+    delete legacyGt.contactEmail;
+    delete legacyGt.mission;
+    delete legacyGt.socialHandle;
+    delete legacyGt.style;
+    delete legacyGt.values;
+
+    const hydrated = hydrateBrandIdentities([legacyGt]);
+    const gt = hydrated.find(({ id }) => id === 'gt')!;
+
+    expect(gt.contactEmail).toBe(GT_BRAND_IDENTITY.contactEmail);
+    expect(gt.mission).toBe(GT_BRAND_IDENTITY.mission);
+    expect(gt.socialHandle).toBe(GT_BRAND_IDENTITY.socialHandle);
+    expect(gt.style).toEqual(GT_BRAND_IDENTITY.style);
+    expect(gt.values).toEqual(GT_BRAND_IDENTITY.values);
+  });
 });

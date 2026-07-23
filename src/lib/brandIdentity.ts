@@ -28,23 +28,43 @@ export type BrandMotion = {
   previewPath: string;
 };
 
+export type BrandStyle = {
+  borderRadius: number;
+  density: 'compact' | 'comfortable' | 'spacious';
+  grid: 'none' | 'dots' | 'lines';
+  imageTreatment: 'natural' | 'monochrome' | 'duotone';
+  logoScale: number;
+};
+
+export const DEFAULT_BRAND_STYLE: BrandStyle = {
+  borderRadius: 6,
+  density: 'comfortable',
+  grid: 'dots',
+  imageTreatment: 'natural',
+  logoScale: 100,
+};
+
 export type BrandIdentity = {
   assets: BrandAsset[];
   audiences: string[];
   builtIn: boolean;
   colors: BrandColor[];
+  contactEmail: string;
   description: string;
   greetings: string[];
   id: string;
   kind: 'template' | 'example' | 'custom';
   motion: BrandMotion[];
+  mission: string;
   name: string;
   positioning: string;
   products: string[];
   proof: string[];
   proofAssets: BrandAsset[];
   shortName: string;
+  socialHandle: string;
   sourceNotes: string[];
+  style: BrandStyle;
   tagline: string;
   typography: BrandTypography[];
   voice: {
@@ -52,6 +72,7 @@ export type BrandIdentity = {
     phrases: string[];
     principles: string[];
   };
+  values: string[];
   website: string;
 };
 
@@ -117,6 +138,7 @@ export const GT_BRAND_IDENTITY: BrandIdentity = {
     { hex: '#525252', id: 'progress', name: 'Graphite', role: 'Active and in-progress status' },
     { hex: '#262626', id: 'error', name: 'Charcoal', role: 'Destructive and error states' },
   ],
+  contactEmail: 'hello@generaltranslation.com',
   description:
     'The end-to-end internationalization platform for developers, spanning product code, context-aware translation, delivery, and automated repository work.',
   greetings: ['Welcome', 'Bienvenidos', '你好', 'ようこそ', 'أهلاً وسهلاً'],
@@ -156,6 +178,7 @@ export const GT_BRAND_IDENTITY: BrandIdentity = {
       previewPath: '/examples/gt-type-delete.gif',
     },
   ],
+  mission: 'Make every product feel native in every language without disconnecting content from code.',
   name: 'General Translation',
   positioning:
     'Code remains the source of truth while GT keeps product copy, documentation, and code moving together across locales.',
@@ -169,12 +192,20 @@ export const GT_BRAND_IDENTITY: BrandIdentity = {
     { id: 'windsurf', label: 'Windsurf', path: '/brands/gt/proof/windsurf.svg', surface: 'light', type: 'proof' },
   ],
   shortName: 'GT',
+  socialHandle: '@generaltranslation',
   sourceNotes: [
     'Identity assets from the dashboard and landing applications',
     'Semantic tokens and component rules audited from the GT product system',
     'Product language from landing metadata, llms.txt, and onboarding email',
     'Motion studies from the GT multilingual email animation set',
   ],
+  style: {
+    borderRadius: 0,
+    density: 'comfortable',
+    grid: 'dots',
+    imageTreatment: 'monochrome',
+    logoScale: 100,
+  },
   tagline: 'End-to-end localization for the world’s best companies.',
   typography: [
     { family: 'Inter', role: 'Display', usage: 'Headlines, product UI, and high-emphasis brand copy' },
@@ -195,6 +226,7 @@ export const GT_BRAND_IDENTITY: BrandIdentity = {
     ],
     principles: ['Developer-first', 'Direct and concrete', 'Technically credible', 'Globally aware'],
   },
+  values: ['Source of truth', 'Context over strings', 'Developer agency', 'Global by default'],
   website: 'generaltranslation.com',
 };
 
@@ -232,29 +264,34 @@ export const STARTER_BRAND_IDENTITY: BrandIdentity = {
   ],
   audiences: ['Your primary audience', 'The people your product serves'],
   builtIn: true,
+  contactEmail: 'hello@yourbrand.com',
   description:
     'A clean starting system with a neutral foundation, one accent, practical type roles, and room for your own assets.',
   greetings: ['Hello', 'Your idea', 'Your language'],
   id: 'starter',
   kind: 'template',
   motion: [],
+  mission: 'State the durable change your brand exists to create.',
   name: 'Starter',
   positioning: 'Describe what you make, who it is for, and why it matters in one concrete sentence.',
   products: ['Product', 'Platform', 'Community'],
   proof: [],
   proofAssets: [],
   shortName: 'ST',
+  socialHandle: '@yourbrand',
   sourceNotes: [
     'A reusable starting point included with Glyphfield',
     'Duplicate this project to create a persistent brand workspace',
     'Open the GT project to see a fully populated identity',
   ],
+  style: { ...DEFAULT_BRAND_STYLE },
   tagline: 'A clear idea, made repeatable.',
   voice: {
     avoid: ['Vague claims', 'Generic superlatives'],
     phrases: ['Say one useful thing clearly.'],
     principles: ['Clear', 'Specific', 'Consistent', 'Recognizable'],
   },
+  values: ['Clarity', 'Utility', 'Consistency'],
   website: 'yourbrand.com',
 };
 
@@ -395,21 +432,41 @@ function cloneBrandIdentity(identity: BrandIdentity): BrandIdentity {
   return {
     ...identity,
     assets: identity.assets.map((asset) => ({ ...asset })),
-    audiences: [...identity.audiences],
-    colors: identity.colors.map((color) => ({ ...color })),
-    greetings: [...identity.greetings],
-    motion: identity.motion.map((motion) => ({ ...motion })),
-    products: [...identity.products],
-    proof: [...identity.proof],
-    proofAssets: identity.proofAssets.map((asset) => ({ ...asset })),
-    sourceNotes: [...identity.sourceNotes],
-    typography: identity.typography.map((font) => ({ ...font })),
+    audiences: [...(identity.audiences ?? [])],
+    colors: (identity.colors ?? []).map((color) => ({ ...color })),
+    contactEmail: identity.contactEmail ?? '',
+    greetings: [...(identity.greetings ?? [])],
+    mission: identity.mission ?? identity.positioning ?? '',
+    motion: (identity.motion ?? []).map((motion) => ({ ...motion })),
+    products: [...(identity.products ?? [])],
+    proof: [...(identity.proof ?? [])],
+    proofAssets: (identity.proofAssets ?? []).map((asset) => ({ ...asset })),
+    socialHandle: identity.socialHandle ?? '',
+    sourceNotes: [...(identity.sourceNotes ?? [])],
+    style: { ...DEFAULT_BRAND_STYLE, ...identity.style },
+    typography: (identity.typography ?? []).map((font) => ({ ...font })),
+    values: [...(identity.values ?? [])],
     voice: {
-      avoid: [...identity.voice.avoid],
-      phrases: [...identity.voice.phrases],
-      principles: [...identity.voice.principles],
+      avoid: [...(identity.voice?.avoid ?? [])],
+      phrases: [...(identity.voice?.phrases ?? [])],
+      principles: [...(identity.voice?.principles ?? [])],
     },
   };
+}
+
+function mergeBrandIdentity(
+  identity: BrandIdentity,
+  fallback: BrandIdentity
+): BrandIdentity {
+  return cloneBrandIdentity({
+    ...fallback,
+    ...identity,
+    contactEmail: identity.contactEmail ?? fallback.contactEmail,
+    mission: identity.mission ?? fallback.mission,
+    socialHandle: identity.socialHandle ?? fallback.socialHandle,
+    style: { ...fallback.style, ...identity.style },
+    values: identity.values ?? fallback.values,
+  });
 }
 
 export function createBrandIdentity(name: string, id = crypto.randomUUID()): BrandIdentity {
@@ -428,18 +485,22 @@ export function createBrandIdentity(name: string, id = crypto.randomUUID()): Bra
     audiences: [],
     builtIn: false,
     colors: GT_BRAND_IDENTITY.colors.map((color) => ({ ...color })),
+    contactEmail: '',
     description: 'A local brand identity ready for assets, tokens, motion, and repeatable graphics.',
     greetings: ['Welcome'],
     id,
     kind: 'custom',
     motion: [],
+    mission: 'Add the durable change this brand exists to create.',
     name: trimmedName,
     positioning: 'Add a concise positioning statement for this identity.',
     products: [],
     proof: [],
     proofAssets: [],
     shortName: resolvedShortName,
+    socialHandle: `@${trimmedName.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '')}`,
     sourceNotes: ['Created locally in Glyphfield'],
+    style: { ...DEFAULT_BRAND_STYLE },
     tagline: 'Add a clear brand line.',
     typography: GT_BRAND_IDENTITY.typography.map((font) => ({ ...font })),
     voice: {
@@ -447,6 +508,7 @@ export function createBrandIdentity(name: string, id = crypto.randomUUID()): Bra
       phrases: [],
       principles: ['Clear', 'Specific', 'Consistent'],
     },
+    values: ['Clarity', 'Utility', 'Consistency'],
     website: '',
   };
 }
@@ -471,7 +533,7 @@ export function hydrateBrandIdentities(value: unknown): BrandIdentity[] {
   const storedGt = storedIdentities.find(({ id }) => id === GT_BRAND_IDENTITY.id);
   const starterIdentity = storedStarter
     ? {
-        ...cloneBrandIdentity(storedStarter),
+        ...mergeBrandIdentity(storedStarter, STARTER_BRAND_IDENTITY),
         builtIn: true,
         id: STARTER_BRAND_IDENTITY.id,
         kind: 'template' as const,
@@ -479,7 +541,7 @@ export function hydrateBrandIdentities(value: unknown): BrandIdentity[] {
     : cloneBrandIdentity(STARTER_BRAND_IDENTITY);
   const gtIdentity = storedGt
     ? {
-        ...cloneBrandIdentity(storedGt),
+        ...mergeBrandIdentity(storedGt, GT_BRAND_IDENTITY),
         builtIn: true,
         id: GT_BRAND_IDENTITY.id,
         kind: 'example' as const,

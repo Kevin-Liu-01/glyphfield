@@ -112,7 +112,7 @@ export const AGENT_GENERATION_CONTRACT = {
         output: 'json | raw; defaults to json',
         partnerId: 'Optional public proof asset ID from /api/identities',
         partnerLogoDataUrl: 'Optional base64 image data URL, maximum 5 MB',
-        slideLayout: 'title | section | agenda | split | metrics | quote | timeline | closing',
+        slideLayout: 'title | section | agenda | split | metrics | quote | timeline | statement | comparison | process | chart | team | image | closing',
         template: 'slides | blog | partnership',
         texture: 'white | dark | grid | noise',
         title: 'Optional string, maximum 240 characters',

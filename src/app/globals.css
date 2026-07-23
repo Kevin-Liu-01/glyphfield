@@ -1383,6 +1383,34 @@ body {
   height: 100%;
 }
 
+.ratio-safe {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  flex: none;
+  object-fit: contain;
+}
+
+.brand-elements-canvas :is(.aspect-square, [class*='aspect-[']) {
+  height: auto;
+  min-height: 0;
+  flex: none;
+}
+
+.brand-element-artboard[data-ratio-locked='true'] {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.brand-element-artboard[data-ratio-locked='true'] > * {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: inherit;
+}
+
 .studio-mobile-tool {
   display: none;
 }
@@ -1611,6 +1639,45 @@ body {
 .tool-canvas,
 .studio-stage {
   background-color: hsl(var(--canvas-background));
+}
+
+.component-library-demo {
+  overflow: hidden;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  border-radius: var(--component-radius);
+}
+
+.component-library-demo[data-surface='soft'] {
+  background: hsl(var(--muted));
+}
+
+.component-library-demo[data-surface='inverse'] {
+  color: hsl(var(--background));
+  background: hsl(var(--foreground));
+}
+
+.component-library-demo[data-surface='inverse'] .bg-background {
+  color: inherit;
+  background: transparent;
+}
+
+.component-library-demo[data-surface='inverse'] .text-muted-foreground {
+  color: hsl(var(--background) / 0.58);
+}
+
+.component-library-demo :is(button, input, textarea, article, aside, nav, [role='dialog']) {
+  border-radius: var(--component-radius);
+}
+
+.component-library-demo.component-density-compact [class~='p-8'],
+.component-library-demo.component-density-compact [class~='p-6'] {
+  padding: 1rem;
+}
+
+.component-library-demo.component-density-spacious [class~='p-8'],
+.component-library-demo.component-density-spacious [class~='p-6'] {
+  padding: 2.5rem;
 }
 
 .canvas-viewport {

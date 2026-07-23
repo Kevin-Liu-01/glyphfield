@@ -224,33 +224,26 @@ function ElementEditor({
       element.id
     );
   const actionSupported =
-    element.category === 'Product' ||
-    ['welcome-email', 'transactional-email', 'web-card', 'error-page', 'community-card', 'launch-card', 'cli-banner', 'github-readme', 'docs-header', 'package-card'].includes(
-      element.id
-    );
+    !contentless &&
+    !personOnly &&
+    !['ascii-mark', 'terminal-theme', 'partnership-lockup', 'slide-title', 'slide-section', 'report-cover', 'press-kit', 'event-backdrop', 'booth-wall'].includes(element.id);
   const layoutSupported =
-    element.category === 'Product' ||
-    ['github-readme', 'docs-header', 'package-card', 'x-post', 'linkedin-post', 'community-card', 'launch-card', 'slide-title', 'slide-section', 'blog-cover', 'report-cover', 'press-kit', 'web-card', 'opengraph', 'error-page'].includes(
-      element.id
-    );
+    !contentless &&
+    !personOnly &&
+    !['ascii-mark', 'terminal-theme', 'cli-banner', 'partnership-lockup', 'event-backdrop', 'booth-wall'].includes(element.id);
   const scaleSupported =
-    element.category === 'Product' ||
-    ['x-post', 'linkedin-post', 'community-card', 'launch-card', 'slide-title', 'slide-section', 'blog-cover', 'report-cover', 'press-kit', 'event-backdrop', 'web-card', 'opengraph', 'error-page'].includes(
-      element.id
-    );
+    layoutSupported && !['form-controls', 'settings-panel', 'data-table'].includes(element.id);
   const patternSupported =
     !['email-signature', 'lanyard', 'event-badge', 'business-card', 'letterhead', 'favicon-set', 'app-icon'].includes(
       element.id
     );
   const logoSupported = !['ascii-mark', 'terminal-theme', 'cli-banner'].includes(element.id);
   const artworkSupported =
-    ['welcome-email', 'logo-background', 'favicon-set', 'app-icon', 'x-post', 'linkedin-post', 'community-card', 'launch-card', 'event-backdrop', 'partnership-lockup', 'web-card', 'opengraph'].includes(
+    ['welcome-email', 'logo-background', 'favicon-set', 'app-icon', 'x-post', 'linkedin-post', 'community-card', 'launch-card', 'app-store-gallery', 'video-thumbnail', 'podcast-cover', 'social-carousel', 'event-backdrop', 'booth-wall', 'partnership-lockup', 'web-card', 'opengraph'].includes(
       element.id
     );
   const websiteSupported =
-    ['welcome-email', 'transactional-email', 'email-signature', 'x-post', 'linkedin-post', 'community-card', 'launch-card', 'slide-title', 'slide-section', 'blog-cover', 'report-cover', 'press-kit', 'event-backdrop', 'business-card', 'packaging-label', 'letterhead', 'web-card', 'opengraph', 'error-page'].includes(
-      element.id
-    );
+    !contentless && !['ascii-mark', 'terminal-theme', 'cli-banner', 'modal-dialog', 'toast-notification'].includes(element.id);
 
   return (
     <aside className='brand-elements-editor min-h-0 overflow-y-auto border-l border-border bg-background'>
@@ -355,11 +348,28 @@ function IdentityMark({
   );
 }
 
-function ElementFrame({ children, fontFamily }: { children: ReactNode; fontFamily: string }) {
+function declaredAspectRatio(dimensions: string): number | undefined {
+  const match = dimensions.match(/([\d.]+)\s*(?:×|:|x)\s*([\d.]+)/i);
+  if (!match) return undefined;
+  const width = Number(match[1]);
+  const height = Number(match[2]);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return undefined;
+  }
+  return width / height;
+}
+
+function ElementFrame({ aspectRatio, children, fontFamily }: { aspectRatio?: number; children: ReactNode; fontFamily: string }) {
   return (
     <div className='flex w-full max-w-5xl flex-col' style={{ fontFamily }}>
       <div className='min-h-0 overflow-auto border border-border bg-muted/30 p-4 sm:p-7'>
-        {children}
+        <div
+          className='brand-element-artboard mx-auto'
+          data-ratio-locked={aspectRatio ? 'true' : undefined}
+          style={aspectRatio ? { aspectRatio } : undefined}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -522,7 +532,7 @@ function DeveloperPreview({ element, identity, settings }: { element: BrandEleme
     );
   }
 
-  if (['github-readme', 'docs-header', 'package-card'].includes(element.id)) {
+  if (['github-readme', 'docs-header', 'package-card', 'api-reference-hero', 'code-playground', 'release-notes'].includes(element.id)) {
     return (
       <div className={`relative mx-auto grid w-full max-w-4xl overflow-hidden shadow-sm ${element.id === 'package-card' ? 'aspect-[8/5]' : 'aspect-[16/7]'} ${settings.layout === 'centered' ? 'place-items-center text-center' : 'grid-cols-[1.15fr_0.85fr]'}`} style={elementSurfaceStyle(settings)}>
         <ElementPattern settings={settings} />
@@ -562,10 +572,11 @@ function DeveloperPreview({ element, identity, settings }: { element: BrandEleme
 
 function SocialPreview({ element, identity, settings }: { element: BrandElement; identity: BrandIdentity; settings: BrandElementSettings }) {
   const dark = isDarkSurface(settings.backgroundColor);
-  const square = element.id === 'linkedin-post';
+  const square = ['linkedin-post', 'podcast-cover'].includes(element.id);
+  const portrait = element.id === 'social-carousel';
   const centered = settings.layout === 'centered';
   return (
-    <div className={`relative mx-auto grid w-full overflow-hidden shadow-sm ${square ? 'aspect-square max-w-3xl' : 'aspect-[16/9] max-w-4xl'} ${centered ? 'place-items-center text-center' : settings.layout === 'stacked' ? 'grid-cols-1' : 'grid-cols-[1fr_0.72fr]'}`} style={elementSurfaceStyle(settings)}>
+    <div className={`relative mx-auto grid w-full overflow-hidden shadow-sm ${square ? 'aspect-square max-w-3xl' : portrait ? 'aspect-[4/5] max-w-2xl' : 'aspect-[16/9] max-w-4xl'} ${centered ? 'place-items-center text-center' : settings.layout === 'stacked' ? 'grid-cols-1' : 'grid-cols-[1fr_0.72fr]'}`} style={elementSurfaceStyle(settings)}>
       <ElementPattern settings={settings} />
       <div className='relative z-10 flex flex-col justify-between p-8 sm:p-12'>
         <div className='flex items-center gap-3'>
@@ -589,7 +600,7 @@ function SocialPreview({ element, identity, settings }: { element: BrandElement;
 
 function EditorialPreview({ element, identity, settings }: { element: BrandElement; identity: BrandIdentity; settings: BrandElementSettings }) {
   const dark = isDarkSurface(settings.backgroundColor);
-  const portrait = element.id === 'report-cover';
+  const portrait = ['report-cover', 'whitepaper-cover', 'notebook-cover'].includes(element.id);
   const pressKit = element.id === 'press-kit';
   return (
     <div className={`relative mx-auto flex w-full flex-col justify-between overflow-hidden p-8 shadow-sm sm:p-14 ${portrait ? 'aspect-[4/5] max-w-2xl' : 'aspect-[16/9] max-w-5xl'} ${settings.layout === 'centered' ? 'items-center text-center' : ''}`} style={elementSurfaceStyle(settings)}>
@@ -623,7 +634,7 @@ function EventPreview({ element, identity, settings }: { element: BrandElement; 
       </div>
     );
   }
-  if (element.id === 'event-backdrop') {
+  if (['event-backdrop', 'booth-wall'].includes(element.id)) {
     return (
       <div className='relative mx-auto flex aspect-[16/9] w-full max-w-5xl flex-col justify-between overflow-hidden p-10 shadow-sm sm:p-16' style={elementSurfaceStyle(settings)}>
         <ElementPattern settings={settings} />
@@ -747,6 +758,7 @@ function ProductComponentPreview({ element, identity, settings }: { element: Bra
   const dark = isDarkSurface(settings.backgroundColor);
   const borderColor = `color-mix(in srgb, ${settings.foregroundColor} 16%, transparent)`;
   const mutedSurface = `color-mix(in srgb, ${settings.foregroundColor} 5%, ${settings.backgroundColor})`;
+  const radius = identity.style.borderRadius;
   const logo = settings.showLogo ? <IdentityMark className='size-9 object-contain text-sm' identity={identity} inverted={dark} /> : null;
   const action = settings.cta ? <span className='inline-flex w-fit px-4 py-2.5 text-sm font-semibold' style={actionStyle(settings)}>{settings.cta} →</span> : null;
 
@@ -768,6 +780,52 @@ function ProductComponentPreview({ element, identity, settings }: { element: Bra
         <div className='relative z-10 flex flex-col justify-center p-8 sm:p-14'>{logo}{settings.eyebrow ? <p className='mt-12 font-mono text-xs uppercase tracking-widest opacity-45'>{settings.eyebrow}</p> : null}<h2 className={`mt-4 max-w-3xl font-semibold leading-[0.98] tracking-[-0.055em] ${typeScale(settings)}`}>{settings.headline}</h2><p className='mt-5 max-w-xl text-sm leading-6 opacity-60'>{settings.body}</p><div className='mt-7'>{action}</div></div>
         {settings.layout !== 'centered' ? <div className='relative z-10 grid place-items-center overflow-hidden' style={{ backgroundColor: settings.accentColor }}><div className='grid size-48 place-items-center border border-white/25 text-6xl font-semibold' style={{ color: isDarkSurface(settings.accentColor) ? '#FFFFFF' : '#181818' }}>{identity.shortName}</div></div> : null}
       </div>
+    );
+  }
+
+  if (element.id === 'auth-screen') {
+    return (
+      <div className='relative mx-auto grid aspect-[16/10] w-full max-w-4xl overflow-hidden shadow-sm md:grid-cols-[1fr_0.9fr]' style={{ ...elementSurfaceStyle(settings), borderRadius: radius }}>
+        <ElementPattern settings={settings} />
+        <div className='relative z-10 flex flex-col justify-between p-8 sm:p-12'>{logo}<div><p className='font-mono text-xs uppercase tracking-widest opacity-45'>{settings.eyebrow}</p><h2 className='mt-3 text-4xl font-semibold tracking-[-0.05em]'>{settings.headline}</h2><p className='mt-3 text-sm opacity-55'>{settings.body}</p></div><span className='font-mono text-xs opacity-40'>{identity.website}</span></div>
+        <div className='relative z-10 flex flex-col justify-center gap-4 p-8' style={{ backgroundColor: mutedSurface }}><label className='text-xs opacity-60'>Email<input className='mt-2 h-11 w-full border bg-transparent px-3 text-sm opacity-100' style={{ borderColor, borderRadius: Math.min(radius, 10) }} value={identity.contactEmail} readOnly /></label><label className='text-xs opacity-60'>Password<input className='mt-2 h-11 w-full border bg-transparent px-3 text-sm opacity-100' style={{ borderColor, borderRadius: Math.min(radius, 10) }} value='••••••••••' readOnly /></label><span className='mt-2 inline-flex h-11 items-center justify-center text-sm font-semibold' style={{ ...actionStyle(settings), borderRadius: Math.min(radius, 10) }}>{settings.cta || 'Continue'}</span></div>
+      </div>
+    );
+  }
+
+  if (element.id === 'sidebar-navigation') {
+    const destinations = settings.body.split(/[·|\n]/).map((item) => item.trim()).filter(Boolean);
+    return (
+      <div className='relative mx-auto grid min-h-[540px] w-full max-w-5xl overflow-hidden shadow-sm md:grid-cols-[240px_1fr]' style={{ ...elementSurfaceStyle(settings), border: `1px solid ${borderColor}`, borderRadius: radius }}>
+        <aside className='relative z-10 flex flex-col border-r p-5' style={{ borderColor }}><div className='flex items-center gap-3'>{logo}<strong>{identity.name}</strong></div><div className='mt-10 flex flex-col gap-1'>{destinations.map((item, index) => <span className='px-3 py-2 text-sm' key={item} style={{ backgroundColor: index === 0 ? mutedSurface : undefined, borderRadius: Math.min(radius, 8) }}>{item}</span>)}</div><span className='mt-auto text-xs opacity-45'>{identity.socialHandle}</span></aside>
+        <div className='relative z-10 flex flex-col justify-between p-8 sm:p-12'><div><p className='font-mono text-xs opacity-40'>{settings.eyebrow}</p><h2 className='mt-3 text-4xl font-semibold tracking-[-0.045em]'>{settings.headline}</h2></div><div className='grid gap-3 sm:grid-cols-3'>{identity.values.slice(0, 3).map((value, index) => <div className='min-h-32 border p-4' key={value} style={{ borderColor, borderRadius: Math.min(radius, 12) }}><span className='font-mono text-xs opacity-35'>0{index + 1}</span><p className='mt-10 font-semibold'>{value}</p></div>)}</div></div>
+      </div>
+    );
+  }
+
+  if (element.id === 'search-surface') {
+    return (
+      <div className='relative mx-auto grid min-h-[520px] w-full max-w-4xl place-items-center overflow-hidden p-8 shadow-sm' style={{ ...elementSurfaceStyle(settings), backgroundColor: mutedSurface, borderRadius: radius }}><ElementPattern settings={settings} /><div className='relative z-10 w-full max-w-2xl border p-3 shadow-xl' style={{ backgroundColor: settings.backgroundColor, borderColor, borderRadius: radius }}><div className='flex h-12 items-center gap-3 border-b px-3' style={{ borderColor }}><span className='text-lg'>⌕</span><span className='text-sm opacity-45'>{settings.body}</span><kbd className='ml-auto font-mono text-xs opacity-35'>ESC</kbd></div><div className='py-2'>{['Open brand settings', 'Generate a design board', 'Export selected artifact', 'Invite a collaborator'].map((item, index) => <div className='flex items-center justify-between px-4 py-3 text-sm' key={item} style={{ backgroundColor: index === 0 ? mutedSurface : undefined, borderRadius: Math.min(radius, 8) }}><span>{item}</span><span className='font-mono opacity-35'>↵</span></div>)}</div></div></div>
+    );
+  }
+
+  if (element.id === 'onboarding-checklist') {
+    const steps = settings.body.split('\n').map((item) => item.trim()).filter(Boolean);
+    return (
+      <div className='relative mx-auto w-full max-w-3xl overflow-hidden p-8 shadow-sm sm:p-12' style={{ ...elementSurfaceStyle(settings), border: `1px solid ${borderColor}`, borderRadius: radius }}><ElementPattern settings={settings} /><div className='relative z-10'>{logo}<p className='mt-8 font-mono text-xs opacity-40'>{settings.eyebrow}</p><h2 className='mt-3 text-3xl font-semibold tracking-[-0.04em]'>{settings.headline}</h2><div className='mt-8 flex flex-col gap-2'>{steps.map((step, index) => <div className='flex items-center gap-3 border p-4 text-sm' key={step} style={{ borderColor, borderRadius: Math.min(radius, 10) }}><span className='grid size-6 place-items-center text-xs' style={{ backgroundColor: index < 2 ? settings.accentColor : mutedSurface, color: index < 2 && isDarkSurface(settings.accentColor) ? '#fff' : settings.foregroundColor, borderRadius: 99 }}>{index < 2 ? '✓' : index + 1}</span><span>{step}</span></div>)}</div><div className='mt-7'>{action}</div></div></div>
+    );
+  }
+
+  if (element.id === 'file-uploader') {
+    return (
+      <div className='relative mx-auto grid min-h-[480px] w-full max-w-4xl place-items-center overflow-hidden p-8 shadow-sm' style={{ ...elementSurfaceStyle(settings), borderRadius: radius }}><ElementPattern settings={settings} /><div className='relative z-10 flex w-full max-w-xl flex-col items-center border border-dashed p-12 text-center' style={{ borderColor, borderRadius: radius }}><span className='grid size-12 place-items-center border text-xl' style={{ borderColor, borderRadius: Math.min(radius, 10) }}>↑</span><h2 className='mt-6 text-2xl font-semibold'>{settings.headline}</h2><p className='mt-3 max-w-sm text-sm leading-6 opacity-55'>{settings.body}</p><div className='mt-6'>{action}</div></div></div>
+    );
+  }
+
+  if (element.id === 'status-page') {
+    const services = settings.body.split('\n').map((item) => item.trim()).filter(Boolean);
+    return (
+      <div className='relative mx-auto w-full max-w-4xl overflow-hidden p-8 shadow-sm sm:p-12' style={{ ...elementSurfaceStyle(settings), border: `1px solid ${borderColor}`, borderRadius: radius }}><ElementPattern settings={settings} /><div className='relative z-10 flex items-start justify-between gap-8'>{logo}<span className='font-mono text-xs opacity-40'>{settings.eyebrow}</span></div><div className='relative z-10 mt-16 flex items-center gap-3'><span className='size-3 rounded-full bg-status-success' /><h2 className='text-3xl font-semibold tracking-[-0.04em]'>{settings.headline}</h2></div><div className='relative z-10 mt-10 flex flex-col'>{services.map((service) => <div className='flex items-center justify-between border-t py-4 text-sm' key={service} style={{ borderColor }}><span>{service}</span><span className='text-status-success'>Operational</span></div>)}</div></div>
     );
   }
 
@@ -1021,7 +1079,7 @@ export default function BrandElementsStudio({
               </div>
             </div>
             <CanvasViewport className='min-h-[560px] flex-1' identityId={identity.id} stageClassName='grid min-h-[560px] place-items-center p-5 sm:p-8' toolId={tool.id}>
-              <ElementFrame fontFamily={identity.typography.find(({ role }) => role === 'Display')?.family ?? 'Inter'}>
+              <ElementFrame aspectRatio={declaredAspectRatio(selectedElement.dimensions)} fontFamily={identity.typography.find(({ role }) => role === 'Display')?.family ?? 'Inter'}>
                 <ElementPreview element={selectedElement} identity={identity} settings={selectedSettings} />
               </ElementFrame>
             </CanvasViewport>
