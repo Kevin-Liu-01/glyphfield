@@ -467,6 +467,137 @@ function AppearanceMenu({
   );
 }
 
+function StudioCommandPalette({
+  activeToolId,
+  onClose,
+  onSelect,
+  query,
+  setQuery,
+  tools,
+}: {
+  activeToolId: StudioToolId;
+  onClose: () => void;
+  onSelect: (toolId: StudioToolId) => void;
+  query: string;
+  setQuery: (query: string) => void;
+  tools: ReturnType<typeof filterStudioTools>;
+}) {
+  const gt = useGT();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useMountEffect(() => {
+    const frame = window.requestAnimationFrame(() => inputRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  });
+
+  function selectResult(toolId: StudioToolId) {
+    onSelect(toolId);
+    onClose();
+  }
+
+  return (
+    <div
+      className='studio-command-overlay'
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) onClose();
+      }}
+    >
+      <section
+        aria-label={gt('Search Studio tools')}
+        aria-modal='true'
+        className='studio-command-dialog'
+        role='dialog'
+      >
+        <header className='studio-command-search'>
+          <Search aria-hidden='true' />
+          <input
+            aria-activedescendant={tools[activeIndex] ? `studio-command-${tools[activeIndex].id}` : undefined}
+            aria-controls='studio-command-results'
+            aria-expanded='true'
+            aria-label={gt('Search Studio tools')}
+            autoComplete='off'
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setActiveIndex(0);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (tools.length > 0) {
+                  setActiveIndex((current) => Math.min(current + 1, tools.length - 1));
+                }
+              } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                setActiveIndex((current) => Math.max(current - 1, 0));
+              } else if (event.key === 'Enter' && tools[activeIndex]) {
+                event.preventDefault();
+                selectResult(tools[activeIndex].id);
+              } else if (event.key === 'Escape') {
+                event.preventDefault();
+                onClose();
+              }
+            }}
+            placeholder={gt('Search email, logos, motion, slides…')}
+            ref={inputRef}
+            role='combobox'
+            value={query}
+          />
+          <kbd>ESC</kbd>
+        </header>
+
+        <div className='studio-command-heading'>
+          <span><T>Studio tools</T></span>
+          <span>{tools.length} {tools.length === 1 ? <T>result</T> : <T>results</T>}</span>
+        </div>
+
+        <div className='studio-command-results' id='studio-command-results' role='listbox'>
+          {tools.map((tool, index) => {
+            const Icon = TOOL_ICONS[tool.id];
+            const selected = index === activeIndex;
+            return (
+              <button
+                aria-selected={selected}
+                className='studio-command-result'
+                data-active-tool={tool.id === activeToolId ? 'true' : undefined}
+                id={`studio-command-${tool.id}`}
+                key={tool.id}
+                onClick={() => selectResult(tool.id)}
+                onMouseEnter={() => setActiveIndex(index)}
+                role='option'
+                type='button'
+              >
+                <span className='studio-command-result-icon'><Icon aria-hidden='true' /></span>
+                <span className='studio-command-result-copy'>
+                  <strong>{gt(tool.name)}</strong>
+                  <small>{gt(tool.description)}</small>
+                </span>
+                <span className='studio-command-result-meta'>
+                  <span>{gt(tool.category)}</span>
+                  <kbd>{tool.shortcut}</kbd>
+                </span>
+              </button>
+            );
+          })}
+          {tools.length === 0 ? (
+            <div className='studio-command-empty'>
+              <Search aria-hidden='true' />
+              <strong><T>No tool found</T></strong>
+              <span><T>Try “email,” “logo,” “shader,” or “slides.”</T></span>
+            </div>
+          ) : null}
+        </div>
+
+        <footer className='studio-command-footer'>
+          <span><kbd>↑</kbd><kbd>↓</kbd><T>Navigate</T></span>
+          <span><kbd>↵</kbd><T>Open tool</T></span>
+          <span className='ml-auto'><T>Search every Studio surface</T></span>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
 export default function StudioApp() {
   const gt = useGT();
   const systemDark = useSyncExternalStore(
@@ -482,6 +613,7 @@ export default function StudioApp() {
   const [activeIdentityId, setActiveIdentityId] = useState(STARTER_BRAND_IDENTITY.id);
   const [activeFolderId, setActiveFolderId] = useState<ProjectFolderId>('all');
   const [query, setQuery] = useState('');
+  const [commandOpen, setCommandOpen] = useState(false);
   const [openIdentityIds, setOpenIdentityIds] = usePersistentState<string[]>(
     OPEN_TABS_STORAGE_KEY,
     () => hydrateBrandIdentities(null).map(({ id }) => id)
@@ -497,7 +629,6 @@ export default function StudioApp() {
         ? 'dark'
         : 'light'
       : resolvedAppearance.theme;
-  const searchRef = useRef<HTMLInputElement>(null);
   const filteredTools = useMemo(() => filterStudioTools(STUDIO_TOOLS, query), [query]);
   const activeTool = STUDIO_TOOLS.find(({ id }) => id === activeToolId);
   const activeIdentity =
@@ -580,15 +711,16 @@ export default function StudioApp() {
       if (isCommandK) {
         event.preventDefault();
         event.stopPropagation();
-        searchRef.current?.focus({ preventScroll: true });
-        searchRef.current?.select();
+        setQuery('');
+        setCommandOpen(true);
         return;
       }
 
       if (!isEditing && event.key === '/') {
         event.preventDefault();
         event.stopPropagation();
-        searchRef.current?.focus({ preventScroll: true });
+        setQuery('');
+        setCommandOpen(true);
       }
     }
 
@@ -600,6 +732,11 @@ export default function StudioApp() {
     setActiveToolId(toolId);
     setQuery('');
     window.localStorage.setItem(ACTIVE_TOOL_STORAGE_KEY, toolId);
+  }
+
+  function closeCommandPalette() {
+    setCommandOpen(false);
+    setQuery('');
   }
 
   function commitIdentities(nextIdentities: BrandIdentity[]) {
@@ -840,34 +977,20 @@ export default function StudioApp() {
             options={STUDIO_TOOLS.map((tool) => ({ label: gt(tool.name), value: tool.id }))}
             value={activeToolId}
           />
-          <label className='flex h-9 min-w-0 flex-1 max-w-xl items-center gap-2 rounded-md border border-input bg-background px-3 focus-within:border-foreground'>
+          <button
+            aria-haspopup='dialog'
+            aria-keyshortcuts='Meta+K Control+K /'
+            className='studio-command-launcher flex h-9 min-w-0 flex-1 max-w-xl items-center gap-2 rounded-md border border-input bg-background px-3 text-left hover:border-foreground'
+            onClick={() => {
+              setQuery('');
+              setCommandOpen(true);
+            }}
+            type='button'
+          >
             <Search className='size-4 shrink-0 text-muted-foreground' aria-hidden='true' />
-            <input
-              aria-label={gt('Search Studio tools')}
-              aria-keyshortcuts='Meta+K Control+K /'
-              className='min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground'
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={gt('Search Studio tools…')}
-              ref={searchRef}
-              value={query}
-            />
-            {query ? (
-              <Button
-                aria-label={gt('Clear search')}
-                className='size-6'
-                onClick={() => setQuery('')}
-                size='icon-xs'
-                type='button'
-                variant='ghost'
-              >
-                <X aria-hidden='true' />
-              </Button>
-            ) : (
-              <kbd className='hidden rounded-md border border-border px-1.5 py-0.5 font-mono text-xs text-muted-foreground sm:inline'>
-                ⌘K
-              </kbd>
-            )}
-          </label>
+            <span className='min-w-0 flex-1 truncate text-sm text-muted-foreground'><T>Search Studio tools…</T></span>
+            <kbd className='hidden rounded-md border border-border px-1.5 py-0.5 font-mono text-xs text-muted-foreground sm:inline'>⌘K</kbd>
+          </button>
           <div className='studio-appearance-toolbar ml-auto flex shrink-0 items-center gap-1.5'>
             <Button asChild size='icon-sm' title={gt('Documentation')} variant='outline'>
               <Link aria-label={gt('Open documentation')} href='/docs'>
@@ -928,7 +1051,7 @@ export default function StudioApp() {
             <span>{'{ }'}</span>
           </span>
         </div>
-        <div className='project-tabs flex min-w-0 items-end gap-2 px-2 pt-1.5'>
+        <div className='project-tabs flex min-w-0 items-end gap-2 px-2 pt-2'>
           <div className='project-tabs-scroll flex min-w-0 flex-1 items-end gap-2 overflow-x-auto self-stretch'>
             <div className='flex shrink-0 items-end gap-1.5 self-stretch' role='tablist' aria-label={gt('Brand projects')}>
               {visibleIdentities.map(renderProjectTab)}
@@ -938,11 +1061,11 @@ export default function StudioApp() {
                 <T>No brands in this folder</T>
               </span>
             ) : null}
-            <Button aria-label={gt('Add brand project')} className='mb-1 shrink-0' disabled={!identitiesReady} onClick={addIdentity} size='icon-xs' type='button' variant='ghost'>
+            <Button aria-label={gt('Add brand project')} className='mb-1.5 shrink-0' disabled={!identitiesReady} onClick={addIdentity} size='icon-sm' type='button' variant='outline'>
               <Plus aria-hidden='true' />
             </Button>
           </div>
-          <div className='project-tabs-actions mb-1 ml-auto flex h-8 shrink-0 items-center gap-1.5 border-l border-border pl-2'>
+          <div className='project-tabs-actions mb-1.5 ml-auto flex h-8 shrink-0 items-center gap-1.5 border-l border-border pl-2'>
             <Button aria-label={gt('Duplicate active project')} className='project-action-button' disabled={!identitiesReady} onClick={copyIdentity} size='sm' title={gt('Duplicate project')} type='button' variant='outline'>
               <Copy aria-hidden='true' />
               <span className='project-action-label'><T>Duplicate</T></span>
@@ -1035,6 +1158,16 @@ export default function StudioApp() {
           )}
         </section>
       </div>
+      {commandOpen ? (
+        <StudioCommandPalette
+          activeToolId={activeToolId}
+          onClose={closeCommandPalette}
+          onSelect={selectTool}
+          query={query}
+          setQuery={setQuery}
+          tools={filteredTools}
+        />
+      ) : null}
     </main>
   );
 }

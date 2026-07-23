@@ -83,7 +83,14 @@ body {
 }
 
 .studio-app {
+  width: 100%;
+  min-height: 100dvh;
   font-family: 'Switzer', var(--font-sans), Arial, sans-serif;
+}
+
+html:has(.studio-app[data-resolved-theme='dark']),
+body:has(.studio-app[data-resolved-theme='dark']) {
+  background: #121212;
 }
 
 .studio-app[data-studio-font='be-vietnam-pro'] {
@@ -203,7 +210,7 @@ body {
 .studio-app-body {
   display: grid;
   grid-template-columns: var(--studio-rail-width) minmax(0, 1fr);
-  height: calc(100dvh - 96px);
+  height: calc(100dvh - 102px);
 }
 
 .project-tabs-shell {
@@ -211,24 +218,13 @@ body {
   z-index: 30;
   display: grid;
   grid-template-columns: var(--studio-rail-width) minmax(0, 1fr);
-  height: 44px;
-}
-
-.project-tabs-shell::after {
-  position: absolute;
-  z-index: 50;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 1px;
-  background: hsl(var(--border));
-  content: '';
-  pointer-events: none;
+  height: 50px;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .project-tabs {
   position: relative;
-  height: 44px;
+  height: 100%;
   overflow: visible;
   background: hsl(var(--background));
   isolation: isolate;
@@ -338,6 +334,10 @@ body {
 
 .project-dither-symbols > span {
   position: absolute;
+  top: 50%;
+  left: 50%;
+  line-height: 1;
+  translate: -50% -50%;
   opacity: 0;
   filter: blur(7px);
   transform: translateY(7px) scale(0.72) rotate(-5deg);
@@ -431,17 +431,6 @@ body {
 
 .project-tab {
   height: 38px;
-  margin-bottom: -1px;
-}
-
-.project-tab[aria-selected='true']::after {
-  position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: 1px;
-  background: hsl(var(--background));
-  content: '';
 }
 
 .project-tab[aria-selected='true'] {
@@ -507,6 +496,222 @@ body {
 
 .project-action-button {
   min-width: max-content;
+}
+
+.studio-command-overlay {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  padding: min(14vh, 140px) 20px 20px;
+  background: hsl(0 0% 0% / 0.52);
+  backdrop-filter: blur(10px);
+}
+
+.studio-command-dialog {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  width: min(760px, 100%);
+  max-height: min(680px, 76vh);
+  overflow: hidden;
+  border: 1px solid hsl(var(--foreground) / 0.24);
+  border-radius: 12px;
+  background: hsl(var(--background));
+  box-shadow: 0 32px 100px hsl(0 0% 0% / 0.34);
+}
+
+.studio-command-search {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.studio-command-search > svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  color: hsl(var(--muted-foreground));
+}
+
+.studio-command-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: hsl(var(--foreground));
+  font-size: 1rem;
+}
+
+.studio-command-search input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.studio-command-search kbd,
+.studio-command-footer kbd,
+.studio-command-result-meta kbd {
+  display: inline-grid;
+  min-width: 24px;
+  min-height: 22px;
+  place-items: center;
+  border: 1px solid hsl(var(--border));
+  border-radius: 5px;
+  background: hsl(var(--muted) / 0.5);
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+}
+
+.studio-command-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px 8px;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.studio-command-results {
+  min-height: 120px;
+  overflow-y: auto;
+  padding: 4px 8px 10px;
+}
+
+.studio-command-result {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: hsl(var(--foreground));
+  text-align: left;
+  cursor: pointer;
+}
+
+.studio-command-result[aria-selected='true'] {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+
+.studio-command-result-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid hsl(var(--border));
+  border-radius: 7px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.studio-command-result-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.studio-command-result-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.studio-command-result-copy strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.studio-command-result-copy small {
+  overflow: hidden;
+  color: currentColor;
+  font-size: 11px;
+  opacity: 0.58;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-command-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: currentColor;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  opacity: 0.58;
+}
+
+.studio-command-result[aria-selected='true'] .studio-command-result-meta kbd {
+  border-color: hsl(var(--background) / 0.3);
+  background: hsl(var(--background) / 0.1);
+  color: hsl(var(--background));
+}
+
+.studio-command-empty {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+}
+
+.studio-command-empty svg {
+  width: 22px;
+}
+
+.studio-command-empty strong {
+  color: hsl(var(--foreground));
+  font-size: 14px;
+}
+
+.studio-command-empty span {
+  font-size: 12px;
+}
+
+.studio-command-footer {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 14px;
+  border-top: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  font-size: 10px;
+}
+
+.studio-command-footer > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+@media (max-width: 640px) {
+  .studio-command-overlay {
+    padding: 10px;
+  }
+
+  .studio-command-dialog {
+    max-height: calc(100dvh - 20px);
+    border-radius: 9px;
+  }
+
+  .studio-command-result-meta > span,
+  .studio-command-footer > span:last-child {
+    display: none;
+  }
 }
 
 @media (max-width: 1120px) {
@@ -1128,13 +1333,13 @@ body {
     gap: 0.35rem;
   }
 
-  .studio-search-bar > label {
+  .studio-search-bar > .studio-command-launcher {
     padding-right: 0.5rem;
     padding-left: 0.5rem;
   }
 
-  .studio-search-bar > label input::placeholder {
-    color: transparent;
+  .studio-command-launcher > span {
+    max-width: 3.5rem;
   }
 
   .studio-appearance-toolbar {
