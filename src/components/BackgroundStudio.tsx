@@ -288,7 +288,7 @@ export default function BackgroundStudio({
           <div className='w-full max-w-5xl'>
             <div
               aria-label={`${identity.name} ${settings.style} background preview`}
-              className='artifact-preview overflow-hidden border border-black/15 bg-white shadow-sm'
+              className='artifact-frame artifact-preview overflow-hidden bg-white'
               dangerouslySetInnerHTML={{ __html: previewSvg }}
               role='img'
               style={{ aspectRatio: `${settings.width} / ${settings.height}` }}

@@ -18,6 +18,7 @@
   --color-muted-foreground: hsl(var(--muted-foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-ring: hsl(var(--ring));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-status-error: hsl(var(--status-error));
@@ -25,6 +26,8 @@
   --color-status-error-border: hsl(var(--status-error-border));
   --color-status-in-progress: hsl(var(--status-in-progress));
   --color-status-success: hsl(var(--status-success));
+  --color-status-success-background: hsl(var(--status-success-background));
+  --color-status-success-border: hsl(var(--status-success-border));
   --default-font-family: var(--font-sans);
   --default-mono-font-family: var(--font-mono);
   --radius-lg: var(--radius);
@@ -57,6 +60,11 @@
   --status-error-border: 0 84% 60% / 0.3;
   --status-in-progress: 25 95% 53%;
   --status-success: 142 76% 36%;
+  --status-success-background: 142 76% 36% / 0.1;
+  --status-success-border: 142 76% 36% / 0.28;
+  --canvas-background: 0 0% 97%;
+  --raised-background: 0 0% 100%;
+  --shadow-color: 0 0% 0%;
   --studio-inspector-width: 292px;
   --studio-rail-width: 216px;
 }
@@ -70,6 +78,11 @@ html,
 body {
   min-width: 320px;
   min-height: 100%;
+}
+
+::selection {
+  color: hsl(var(--primary-foreground));
+  background: hsl(var(--primary));
 }
 
 body {
@@ -900,29 +913,76 @@ body {
   accent-color: hsl(var(--primary));
 }
 
-.studio-app[data-theme='dark'] {
+.studio-app[data-resolved-theme='dark'] {
   --background: 0 0% 7%;
   --foreground: 0 0% 92%;
-  --card: 0 0% 9%;
+  --card: 0 0% 10%;
   --card-foreground: 0 0% 92%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 92%;
   --primary: 0 0% 92%;
   --primary-foreground: 0 0% 8%;
   --secondary: 0 0% 14%;
   --secondary-foreground: 0 0% 92%;
   --muted: 0 0% 13%;
-  --muted-foreground: 0 0% 61%;
+  --muted-foreground: 0 0% 66%;
   --accent: 0 0% 17%;
   --accent-foreground: 0 0% 96%;
-  --border: 0 0% 22%;
-  --input: 0 0% 31%;
+  --border: 0 0% 24%;
+  --input: 0 0% 34%;
   --ring: 0 0% 84%;
+  --emphasis: 0 0% 92%;
+  --status-error: 0 82% 67%;
+  --status-error-background: 0 82% 60% / 0.14;
+  --status-error-border: 0 82% 64% / 0.34;
+  --status-success: 142 68% 54%;
+  --status-success-background: 142 68% 48% / 0.13;
+  --status-success-border: 142 68% 54% / 0.32;
+  --canvas-background: 0 0% 4.5%;
+  --raised-background: 0 0% 11%;
+  --shadow-color: 0 0% 0%;
   color-scheme: dark;
 }
 
-.studio-app[data-theme='dark'] .studio-app-header > a img,
-.studio-app[data-theme='dark'] .project-tab-mark img,
-.studio-app[data-theme='dark'] .project-folder-project-mark img {
+.studio-app[data-resolved-theme='dark'] .studio-app-header > a img {
   filter: invert(1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .studio-app[data-theme='system'] {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 92%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 92%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 92%;
+    --primary: 0 0% 92%;
+    --primary-foreground: 0 0% 8%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 66%;
+    --accent: 0 0% 17%;
+    --accent-foreground: 0 0% 96%;
+    --border: 0 0% 24%;
+    --input: 0 0% 34%;
+    --ring: 0 0% 84%;
+    --emphasis: 0 0% 92%;
+    --status-error: 0 82% 67%;
+    --status-error-background: 0 82% 60% / 0.14;
+    --status-error-border: 0 82% 64% / 0.34;
+    --status-success: 142 68% 54%;
+    --status-success-background: 142 68% 48% / 0.13;
+    --status-success-border: 142 68% 54% / 0.32;
+    --canvas-background: 0 0% 4.5%;
+    --raised-background: 0 0% 11%;
+    --shadow-color: 0 0% 0%;
+    color-scheme: dark;
+  }
+
+  .studio-app[data-theme='system'] .studio-app-header > a img {
+    filter: invert(1);
+  }
 }
 
 .studio-app[data-studio-accent='violet'] {
@@ -1328,6 +1388,11 @@ body {
   min-width: 0;
 }
 
+.tool-canvas,
+.studio-stage {
+  background-color: hsl(var(--canvas-background));
+}
+
 .canvas-viewport {
   position: relative;
   width: 100%;
@@ -1348,8 +1413,8 @@ body {
   padding: 0.125rem;
   border: 1px solid hsl(var(--border));
   border-radius: 0.5rem;
-  background: hsl(var(--background) / 0.94);
-  box-shadow: 0 8px 28px hsl(var(--foreground) / 0.09);
+  background: hsl(var(--raised-background) / 0.94);
+  box-shadow: 0 8px 28px hsl(var(--shadow-color) / 0.24);
   backdrop-filter: blur(12px);
 }
 
@@ -1443,32 +1508,58 @@ body {
 
 .logo-surface-white,
 .template-surface-white {
-  background: hsl(var(--background));
+  color: var(--brand-ink, #18181b);
+  background: var(--brand-paper, #fff);
 }
 
 .logo-surface-dark,
 .template-surface-dark {
-  background: hsl(var(--foreground));
+  color: var(--brand-paper, #fff);
+  background: var(--brand-ink, #18181b);
 }
 
 .logo-surface-grid,
 .template-surface-grid {
-  background-color: hsl(var(--background));
+  color: var(--brand-ink, #18181b);
+  background-color: var(--brand-paper, #fff);
   background-image:
-    linear-gradient(to right, hsl(var(--border) / 0.55) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--border) / 0.55) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in srgb, currentColor 16%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, currentColor 16%, transparent) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
 .logo-surface-noise,
 .template-surface-noise {
-  background-color: hsl(var(--background));
+  color: var(--brand-ink, #18181b);
+  background-color: var(--brand-paper, #fff);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.13'/%3E%3C/svg%3E");
 }
 
 .template-texture-layer.template-surface-grid,
 .template-texture-layer.template-surface-noise {
   background-color: transparent;
+}
+
+.artifact-frame {
+  border: 1px solid hsl(var(--foreground) / 0.2);
+  box-shadow: 0 18px 54px hsl(var(--shadow-color) / 0.14);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .studio-app,
+  .studio-app-header,
+  .project-tabs,
+  .project-dither-panel,
+  .studio-nav,
+  .tool-header,
+  .tool-inspector,
+  .tool-canvas,
+  .canvas-viewport-toolbar {
+    transition:
+      color 160ms ease,
+      border-color 160ms ease,
+      background-color 160ms ease;
+  }
 }
 
 .template-workspace {

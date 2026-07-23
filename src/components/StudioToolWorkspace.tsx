@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { T, useGT } from 'gt-next';
 import {
   Check,
@@ -473,6 +473,8 @@ type LogoSurface = 'white' | 'dark' | 'grid' | 'noise';
 
 function LogoTool({ identity, tool }: { identity: BrandIdentity; tool: StudioTool }) {
   const markPath = brandAssetPath(identity, 'mark-dark');
+  const ink = identity.colors.find(({ id }) => id === 'ink')?.hex ?? '#18181B';
+  const paper = identity.colors.find(({ id }) => id === 'paper')?.hex ?? '#FFFFFF';
   const logoColors = [
     identity.colors.find(({ id }) => id === 'ink'),
     identity.colors.find(({ id }) => id === 'paper'),
@@ -489,9 +491,7 @@ function LogoTool({ identity, tool }: { identity: BrandIdentity; tool: StudioToo
     id: 'ink',
     name: 'Ink',
   };
-  const surfaceColor = surface === 'dark'
-    ? identity.colors.find(({ id }) => id === 'ink')?.hex ?? '#18181B'
-    : identity.colors.find(({ id }) => id === 'paper')?.hex ?? '#FFFFFF';
+  const surfaceColor = surface === 'dark' ? ink : paper;
 
   async function exportLogo() {
     setExporting(true);
@@ -568,7 +568,10 @@ function LogoTool({ identity, tool }: { identity: BrandIdentity; tool: StudioToo
       tool={tool}
     >
       <div className='grid min-h-full place-items-center p-8'>
-        <div className={`logo-surface logo-surface-${surface} grid aspect-square w-full max-w-xl place-items-center overflow-hidden rounded-md border border-border`}>
+        <div
+          className={`artifact-frame logo-surface logo-surface-${surface} grid aspect-square w-full max-w-xl place-items-center overflow-hidden rounded-md`}
+          style={{ '--brand-ink': ink, '--brand-paper': paper } as CSSProperties}
+        >
           <div
             aria-label={`${identity.name} logo preview`}
             className='gt-logo-mask'

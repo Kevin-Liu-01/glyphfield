@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { T, useGT } from 'gt-next';
 import {
   Aperture,
@@ -18,6 +18,7 @@ import {
   Grid3X3,
   Image as ImageIcon,
   LayoutGrid,
+  Monitor,
   Moon,
   MonitorPlay,
   Palette,
@@ -94,7 +95,7 @@ type StudioAppearance = {
   canvas: 'dots' | 'grid' | 'plain';
   density: 'compact' | 'comfortable';
   motion: 'full' | 'reduced';
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'system';
 };
 
 const DEFAULT_APPEARANCE: StudioAppearance = {
@@ -102,8 +103,24 @@ const DEFAULT_APPEARANCE: StudioAppearance = {
   canvas: 'dots',
   density: 'comfortable',
   motion: 'full',
-  theme: 'light',
+  theme: 'system',
 };
+
+type ResolvedTheme = 'light' | 'dark';
+
+function subscribeToSystemTheme(onChange: () => void): () => void {
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  media.addEventListener('change', onChange);
+  return () => media.removeEventListener('change', onChange);
+}
+
+function getSystemThemeSnapshot(): boolean {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function getServerThemeSnapshot(): boolean {
+  return false;
+}
 
 const PROJECT_FOLDERS: readonly { id: ProjectFolderId; label: string }[] = [
   { id: 'all', label: 'All projects' },
@@ -131,6 +148,7 @@ function ProjectFolderMenu({
   onOpenProject,
   onSelect,
   openIdentityIds,
+  theme,
 }: {
   activeIdentityId: string;
   activeFolderId: ProjectFolderId;
@@ -139,6 +157,7 @@ function ProjectFolderMenu({
   onOpenProject: (identityId: string) => void;
   onSelect: (folderId: ProjectFolderId) => void;
   openIdentityIds: string[];
+  theme: ResolvedTheme;
 }) {
   const gt = useGT();
   const [open, setOpen] = useState(false);
@@ -213,7 +232,10 @@ function ProjectFolderMenu({
           </div>
           <div className='project-folder-projects'>
             {folderProjects.map((identity) => {
-              const markPath = brandAssetPath(identity, 'mark-dark');
+              const darkMark = brandAssetPath(identity, 'mark-dark');
+              const lightMark = brandAssetPath(identity, 'mark-light');
+              const markPath = theme === 'dark' ? lightMark ?? darkMark : darkMark ?? lightMark;
+              const invertFallback = theme === 'dark' && !lightMark && Boolean(darkMark);
               const isOpen = openIdentityIds.includes(identity.id);
               const isActive = identity.id === activeIdentityId;
 
@@ -231,7 +253,13 @@ function ProjectFolderMenu({
                 >
                   <span className='project-folder-project-mark' aria-hidden='true'>
                     {markPath ? (
-                      <Image alt='' height={22} src={markPath} width={22} />
+                      <Image
+                        alt=''
+                        height={22}
+                        src={markPath}
+                        style={{ filter: invertFallback ? 'invert(1)' : undefined }}
+                        width={22}
+                      />
                     ) : (
                       identity.shortName.slice(0, 2)
                     )}
@@ -313,16 +341,22 @@ function AppearanceMenu({
               <strong><T>Theme</T></strong>
               <small><T>Studio chrome and controls</T></small>
             </div>
-            <div className='appearance-segments'>
-              {(['light', 'dark'] as const).map((theme) => (
+            <div className='appearance-segments appearance-segments--three'>
+              {(['light', 'dark', 'system'] as const).map((theme) => (
                 <button
                   aria-pressed={appearance.theme === theme}
                   key={theme}
                   onClick={() => onChange({ theme })}
                   type='button'
                 >
-                  {theme === 'light' ? <Sun aria-hidden='true' /> : <Moon aria-hidden='true' />}
-                  {theme === 'light' ? <T>Light</T> : <T>Dark</T>}
+                  {theme === 'light' ? (
+                    <Sun aria-hidden='true' />
+                  ) : theme === 'dark' ? (
+                    <Moon aria-hidden='true' />
+                  ) : (
+                    <Monitor aria-hidden='true' />
+                  )}
+                  {theme === 'light' ? <T>Light</T> : theme === 'dark' ? <T>Dark</T> : <T>Auto</T>}
                 </button>
               ))}
             </div>
@@ -400,6 +434,11 @@ function AppearanceMenu({
 
 export default function StudioApp() {
   const gt = useGT();
+  const systemDark = useSyncExternalStore(
+    subscribeToSystemTheme,
+    getSystemThemeSnapshot,
+    getServerThemeSnapshot
+  );
   const [activeToolId, setActiveToolId] = useState<StudioToolId>('brand-elements');
   const [identities, setIdentities] = useState<BrandIdentity[]>(() =>
     hydrateBrandIdentities(null)
@@ -417,6 +456,12 @@ export default function StudioApp() {
     DEFAULT_APPEARANCE
   );
   const resolvedAppearance = { ...DEFAULT_APPEARANCE, ...appearance };
+  const resolvedTheme: ResolvedTheme =
+    resolvedAppearance.theme === 'system'
+      ? systemDark
+        ? 'dark'
+        : 'light'
+      : resolvedAppearance.theme;
   const searchRef = useRef<HTMLInputElement>(null);
   const filteredTools = useMemo(() => filterStudioTools(STUDIO_TOOLS, query), [query]);
   const activeTool = STUDIO_TOOLS.find(({ id }) => id === activeToolId);
@@ -643,12 +688,22 @@ export default function StudioApp() {
   }
 
   function renderProjectMark(identity: BrandIdentity) {
-    const markPath = brandAssetPath(identity, 'mark-dark');
+    const darkMark = brandAssetPath(identity, 'mark-dark');
+    const lightMark = brandAssetPath(identity, 'mark-light');
+    const markPath = resolvedTheme === 'dark' ? lightMark ?? darkMark : darkMark ?? lightMark;
+    const invertFallback = resolvedTheme === 'dark' && !lightMark && Boolean(darkMark);
 
     if (markPath) {
       return (
         <span className='project-tab-mark' aria-hidden='true'>
-          <Image alt='' className='size-full object-contain' height={20} src={markPath} width={20} />
+          <Image
+            alt=''
+            className='size-full object-contain'
+            height={20}
+            src={markPath}
+            style={{ filter: invertFallback ? 'invert(1)' : undefined }}
+            width={20}
+          />
         </span>
       );
     }
@@ -723,6 +778,7 @@ export default function StudioApp() {
       data-studio-density={resolvedAppearance.density}
       data-studio-motion={resolvedAppearance.motion}
       data-theme={resolvedAppearance.theme}
+      data-resolved-theme={resolvedTheme}
     >
       <header className='studio-app-header border-b border-border bg-background'>
         <Link
@@ -794,7 +850,7 @@ export default function StudioApp() {
             />
             <Button
               aria-label={
-                resolvedAppearance.theme === 'light'
+                resolvedTheme === 'light'
                   ? gt('Switch to dark mode')
                   : gt('Switch to light mode')
               }
@@ -802,19 +858,19 @@ export default function StudioApp() {
                 setAppearance((current) => ({
                   ...DEFAULT_APPEARANCE,
                   ...current,
-                  theme: resolvedAppearance.theme === 'light' ? 'dark' : 'light',
+                  theme: resolvedTheme === 'light' ? 'dark' : 'light',
                 }))
               }
               size='icon-sm'
               title={
-                resolvedAppearance.theme === 'light'
+                resolvedTheme === 'light'
                   ? gt('Dark mode')
                   : gt('Light mode')
               }
               type='button'
               variant='outline'
             >
-              {resolvedAppearance.theme === 'light' ? (
+              {resolvedTheme === 'light' ? (
                 <Moon aria-hidden='true' />
               ) : (
                 <Sun aria-hidden='true' />
@@ -872,6 +928,7 @@ export default function StudioApp() {
               onOpenProject={selectIdentity}
               onSelect={selectProjectFolder}
               openIdentityIds={openIdentityIds}
+              theme={resolvedTheme}
             />
           </div>
         </div>

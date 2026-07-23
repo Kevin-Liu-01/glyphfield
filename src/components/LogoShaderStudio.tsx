@@ -660,7 +660,7 @@ export default function LogoShaderStudio({
           <CanvasViewport identityId={identity.id} stageClassName='grid min-h-full place-items-center p-5 sm:p-8' toolId={tool.id}>
           <div className='w-full max-w-5xl'>
             <div
-              className={`relative w-full overflow-hidden border border-black/15 shadow-sm ${target === 'logo' && transparent ? 'studio-stage' : 'bg-black'}`}
+              className={`artifact-frame relative w-full overflow-hidden ${target === 'logo' && transparent ? 'studio-stage' : 'bg-black'}`}
               style={{ aspectRatio }}
             >
               {target === 'background' || target === 'both' ? (
